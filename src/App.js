@@ -6,33 +6,51 @@ import HomePage from './pages/homepages/homepage.component';
 import SignInAndSignUpPage from './pages/signinandsignup/signinandsignup.component';
 import ShopPage from './pages/shop/shop.component';
 import Header from './components/header/header.component';
-import {auth} from './firebase/firebase.utils';
-class App extends React.Component{
-  constructor(){
+import {auth , createUserProfileDocument} from './firebase/firebase.utils';
+class App extends React.Component {
+  constructor() {
     super();
-    this.state={
-      currentUser:null
-    }
+
+    this.state = {
+      currentUser: null
+    };
   }
 
-  unsubscribeFromAuth=null
+  unsubscribeFromAuth = null;
+
   componentDidMount() {
-    this.unsubscribeFromAuth=auth.onAuthStateChanged(user=>{
-      this.setState({currentUser:user});
-    })
+    this.unsubscribeFromAuth = auth.onAuthStateChanged(async userAuth => {
+      if (userAuth) {
+        const userRef = await createUserProfileDocument(userAuth);
+
+        userRef.onSnapshot(snapShot => {
+          this.setState({
+            currentUser: {
+              id: snapShot.id,
+              ...snapShot.data()
+            }
+          });
+
+          console.log(this.state);
+        });
+      }
+
+      this.setState({ currentUser: userAuth });
+    });
   }
-  componentWillUnmount(){
+
+  componentWillUnmount() {
     this.unsubscribeFromAuth();
   }
-  render(){
+
+  render() {
     return (
       <div>
-
-        <Header currentUser={this.state.currentUser}></Header>
+        <Header currentUser={this.state.currentUser} />
         <Switch>
           <Route exact path='/' component={HomePage} />
-          <Route exact path='/shop' component={ShopPage} />
-          <Route exact path='/signIn' component={SignInAndSignUpPage} />
+          <Route path='/shop' component={ShopPage} />
+          <Route path='/signin' component={SignInAndSignUpPage} />
         </Switch>
       </div>
     );
@@ -40,3 +58,6 @@ class App extends React.Component{
 }
 
 export default App;
+
+
+
