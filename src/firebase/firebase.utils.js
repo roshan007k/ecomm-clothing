@@ -2,7 +2,7 @@ import firebase from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/auth';
 
-const config={
+const config = {
   apiKey: "AIzaSyBz4RvxRDs8zgU2DlhjVKZxbWwhJt-Io1U",
   authDomain: "ecom-cloths.firebaseapp.com",
   projectId: "ecom-cloths",
@@ -11,6 +11,7 @@ const config={
   appId: "1:657055320637:web:bf11916a8e244d860fb854",
   measurementId: "G-BJEGY01C5Q"
 };
+
 firebase.initializeApp(config);
 
 export const createUserProfileDocument = async (userAuth, additionalData) => {
@@ -36,6 +37,35 @@ export const createUserProfileDocument = async (userAuth, additionalData) => {
   }
 
   return userRef;
+};
+
+export const addCollectionAndDocuments=async (collectionKey,objectsToAdd)=>{
+  const collectionRef=firestore.collection(collectionKey)
+  console.log(collectionRef)
+
+  const batch=firestore.batch();
+  objectsToAdd.forEach(obj=>{
+    const newDocRef=collectionRef.doc();
+    batch.set(newDocRef,obj);
+  });
+  return await batch.commit()
+
+}
+
+export const convertCollectionsSnapshotTOMap=(collections)=>{
+    const transformedCollection=collections.docs.map(doc=>{
+    const{title,items}=doc.data();
+    return {
+      routeName:encodeURI(title.toLowerCase()),
+      id:doc.id,
+      title,
+      items
+    }
+  });
+  return transformedCollection.reduce((accumulator,collection)=>{
+    accumulator[collection.title.toLowerCase()]=collection;
+    return accumulator;
+  },{}); 
 };
 
 export const auth = firebase.auth();
